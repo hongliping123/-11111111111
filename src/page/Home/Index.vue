@@ -1,12 +1,12 @@
 <template>
   <div>
     <el-container>
-      <el-aside :style="!isCollapse ? 'width:240px' : 'width:64px'">
+      <el-aside :style="isCollapse ? 'width:240px' : 'width:64px'">
           
-          <el-menu router :default-active="$route.matched[1].name" class="el-menu-vertical-demo" :collapse="isCollapse" :style="!isCollapse ? 'width:240px' : ''">
+          <el-menu router :default-active="$route.matched[1].name" class="el-menu-vertical-demo" :collapse="!isCollapse" :style="isCollapse ? 'width:240px' : ''">
             <el-menu-item style="padding:0">
-              <div class="menu-header" :style="!isCollapse ? 'width:240px' : ''">
-                <img src="/static/img/hb-zc-logo-min.png" alt="" v-if="!isCollapse">
+              <div class="menu-header" :style="isCollapse ? 'width:240px' : ''">
+                <img src="/static/img/hb-zc-logo-min.png" alt="" v-if="isCollapse">
                 <i class="el-icon-s-fold" v-if="!isCollapse" @click="$store.state.isCollapse = !$store.state.isCollapse"></i>
                 <i class="el-icon-s-unfold" v-if="isCollapse" @click="$store.state.isCollapse = !$store.state.isCollapse"></i>
               </div>

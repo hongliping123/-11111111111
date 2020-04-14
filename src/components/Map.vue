@@ -5,7 +5,7 @@
       <img src="/static/img/WechatIMG3.png" v-if="!isHideMenu" alt="" class="zoom" @click="zoom">
       <img src="/static/img/WechatIMG4.png" v-if="isHideMenu" alt="" class="zoom" @click="zoom">
       <div class="map-container">
-        <div class="map-top" v-if="istop">
+        <div class="map-top">
             <div class="map-top-container">
                 <div>
                   <span class="text">排放达标商家</span>
@@ -181,7 +181,7 @@
               <div v-if="urrer==='2'">
                 <div class="air">
                     <div class="air-data">
-                      <span style="font-size:20px;font-weight:bold;color:rgba(118,163,247,1);">长沙市 芙蓉区</span>
+                      <span style="font-size:20px;font-weight:bold;color:rgba(118,163,247,1);">{{City}}</span>
                       <span style="font-size:18px;font-weight:400;color:rgba(0,0,0,1);">今日空气质量指数（AQI）</span>
                       <div class="air-data-value">129</div>
                       <span style="font-size:30px;font-weight:bold;color:rgba(51,51,51,1);">轻度污染</span>
@@ -308,6 +308,7 @@ export default {
       areaInfo:{},
       citys:[],
       city:'',
+      City:"",
       county:'',
       countys:[],
       childAreaInfo:{},
@@ -317,7 +318,7 @@ export default {
       isShowLeftImg2:false,
       isShowLeftImg3:false,
       isShowLeftImg4:false,
-      isShowRightImg:false,
+      isShowRightImg:true,
       bootInfo1:"", //随机时间数
       bootInfo2:"",
       bootInfo3:"",
@@ -459,7 +460,7 @@ export default {
       })                
       this.pointSimplifierIns.setData(null);
     },
-    // 点击信息窗体×跳转到商家详情页面
+    // 点击圆点跳转到商家详情页面
     goShopDetail(uuid){    
       const params = {
         uuid:'00aeeee2502f426b828d82f96fe530bd',
@@ -479,22 +480,23 @@ export default {
           });
         })
         this.map = new AMap.Map('container', {
-          zooms:[3,20],
-          zoom:8,
+          zoom:20, //设置初始化级别
+          zooms:[3,20], //设置缩放级别范围 3-20 级
           expandZoomRange:true,
         })
         
         AMapUI.loadUI(['geo/DistrictExplorer'], function(DistrictExplorer) {
           setTimeout(() => {
-            _this.initPage(DistrictExplorer);
-          }, 2000);
+             _this.initPage(DistrictExplorer);
+           }, 2000);
         })
         
           console.log(this.allArea);
           
     },
+
     async selectShop(info){
-      // console.log(info);
+      console.log(info);
       const _this = this
       if(_this.selectInfo.adcode != info.adcode){
         await _this.switch2AreaNode(info.adcode)
@@ -551,6 +553,7 @@ export default {
       
       this.$get('/org/district/'+areacode,{},(res)=>{
         console.log(res);
+        this.City = res.name
         this.value1 = res.name + res.suffix
         this.areaInfo = res
         if(!this.childAreaInfo.code){
@@ -724,6 +727,11 @@ export default {
 
         
       });
+      // 监听事件 当点击点的时候
+      this.pointSimplifierIns.on('pointClick', function(e, record) {
+          _this.goShopDetail(record.data.dataItem.uuid)
+      });
+
       var distCluster = new DistrictCluster({
         map: map, //所属的地图实例
         zIndex: 11,
@@ -785,7 +793,7 @@ export default {
       distCluster.on('featureClick', function(e, feature) {
         
             currentAdcode = feature.properties.adcode;
-            console.log(feature.properties.adcode);        
+            console.log(feature);        
             //获取该节点的聚合信息
             distCluster.getClusterRecord(currentAdcode, function(error, result) {
               console.log(result);
@@ -825,6 +833,7 @@ export default {
         eventSupport: true, //打开事件支持
         drillDown: true,    // 开启鼠标单击下钻功能，前提要求开启 eventSupport 配置来支持鼠标事件
         map: _this.map, //关联的地图实例
+       
       });
       //鼠标hover提示内容
       _this.$tipMarkerContent = $('<div class="tipMarker top"></div>');
@@ -832,7 +841,7 @@ export default {
       _this.tipMarker = new AMap.Marker({
         content: _this.$tipMarkerContent.get(0),
         offset: new AMap.Pixel(0, 0),
-        bubble: true
+        bubble: true,
       });
       var adcode = this.$store.state.userData.regioncode; //全国的区划编码
       _this.districtExplorer.loadAreaNode(adcode, function(error, areaNode) {
@@ -842,6 +851,7 @@ export default {
           }
           //绘制载入的区划节点
           _this.renderAreaNode(_this.districtExplorer, areaNode);
+         
       });
       _this.districtExplorer.on('featureMouseout featureMouseover', function(e, feature) {        
            _this.toggleHoverFeature(feature, e.type === 'featureMouseover',
@@ -851,7 +861,9 @@ export default {
       
       _this.districtExplorer.on('featureClick', function (e, feature) {
 
-        console.log(feature.properties.adcode);
+        console.log(feature.properties.name);
+        // feature.properties.name 获取当前点击的城市
+        _this.City = feature.properties.name
         // feature.properties.adcode 获取邮政编码
         _this.Fire(feature.properties.adcode)
         if(feature.properties.level === 'district'){  //如果是最下级的行政区则显示点
@@ -886,7 +898,7 @@ export default {
       })
     },
     //根据Hover状态设置相关样式
-      toggleHoverFeature(feature, isHover, position) {
+    toggleHoverFeature(feature, isHover, position) {
           const {tipMarker,map,districtExplorer,$tipMarkerContent} = this
               tipMarker.setMap(isHover ? map : null);
 
@@ -1063,6 +1075,7 @@ export default {
 
       $box.appendTo(ele);
     },
+    // 绘制载入区域节点
     renderAreaNode(districtExplorer, areaNode) {
       const _this = this     
       //清除已有的绘制内容
@@ -1098,7 +1111,7 @@ export default {
         });
       //更新地图视野以适合区划面
       _this.map.setFitView(districtExplorer.getAllFeaturePolygons());
-      // this.map.setZoom(7)
+      _this.map.setZoom(15)
     }
   }
 }
@@ -1286,7 +1299,7 @@ display:none;
 <style lang="scss" scoped>
 .map-container{
   .map-top{
-    width:1500px;
+    width:70%;
     height:80px;
     background:rgba(255,255,255,1);
     box-shadow:0px 0px 7px 1px rgba(0, 0, 0, 0.2);
@@ -1312,19 +1325,22 @@ display:none;
         margin-bottom: 9px;
       }
       .text{
-        font-size:18px;
+        font-size:15px;
         font-family:Microsoft YaHei;
         font-weight:bold;
         color:rgba(0,0,0,1);
-        line-height:17px;
         margin-right: 9px;
+
       }
       .textn{
-        font-size:30px;
+        font-size:25px;
         font-family:Microsoft YaHei;
         font-weight:bold;
         color:rgba(0,102,0,1);
-        line-height:17px;
+        overflow: hidden;
+        text-overflow:ellipsis;
+        white-space: nowrap;
+        width: 75px; 
       }
     }
   }

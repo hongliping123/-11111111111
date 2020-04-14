@@ -6,7 +6,7 @@
         <p>{{userData.orgName}}，今天是{{year}}年{{month}}月{{day}}日　{{weekday}}</p>
       </div>
     </el-card>
-    <el-card style="margin-top:20px" v-if="!isHideMenu">
+    <!-- <el-card style="margin-top:20px" v-if="!isHideMenu">
       <el-collapse accordion v-model="coll">
           <el-collapse-item title="数据统计" name="coll">
             <div class="card-div">
@@ -19,12 +19,12 @@
                     </div>
                     <div class="my-home-menu" style="background:#eafaea">
                       <div style="background:#33cc33">排放达标商家</div>
-                      <h1 style="color:#006600"><!--{{dbData}}-->{{bootInfo1}}</h1>
+                      <h1 style="color:#006600">{{bootInfo1}}</h1>
                       <p>家</p>
                     </div>
                     <div class="my-home-menu" style="background:#ffefef">
                       <div style="background:#ff6666">排放超标商家</div>
-                      <h1 style="color:#660000"><!--{{cbData}}-->{{bootInfo2}}</h1>
+                      <h1 style="color:#660000">{{bootInfo2}}</h1>
                       <p>家</p>
                     </div>
                   </div>
@@ -46,7 +46,7 @@
         </el-collapse-item>
         
       </el-collapse>          
-    </el-card>
+    </el-card> -->
     <Map style="margin-top:20px" @gettotal="gettotal" @zoom="zoom" id="map" ref="map"/>
     <Footer/>
   </div>
@@ -218,6 +218,7 @@ export default {
         console.log('退出全屏')
       }
     })
+    
   },
   methods:{
     zoom(flag){
