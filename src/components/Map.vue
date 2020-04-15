@@ -129,7 +129,8 @@
                 <div class="right-menu">
                   <div style="display:flex;align-items:center">
                     <p v-if="areaInfo.name" @click="backArea">{{value1}}</p>
-                    <el-select placeholder="请选择" v-model="city" style="width:100px;margin-left:10px" v-if="!areaInfo.parentId" @change="selectChange1">
+                    <!-- <el-select placeholder="请选择" v-model="city" style="width:100px;margin-left:10px" v-if="!areaInfo.parentId" @change="selectChange1"> -->
+                      <el-select placeholder="请选择" v-model="city" style="width:100px;margin-left:10px"  @change="selectChange1">
                       <el-option
                         v-for="item in citys"
                         :key="item.value"
@@ -138,7 +139,8 @@
                       >
                       </el-option>
                     </el-select>
-                    <el-select placeholder="请选择" v-model="county" style="width:100px;margin-left:10px" v-if="isHasChildArea" @change="selectChange2">
+                    <!-- <el-select placeholder="请选择" v-model="county" style="width:100px;margin-left:10px" v-if="isHasChildArea" @change="selectChange2"> -->
+                      <el-select placeholder="请选择" v-model="county" style="width:100px;margin-left:10px"  @change="selectChange2">
                       <el-option
                         v-for="item in countys"
                         :key="item.value"
@@ -414,6 +416,13 @@ export default {
     selectChange2(){
       this.menuData = []
       this.switch2AreaNode(this.county)
+      
+      this.countys.forEach((item,index)=>{
+        if( this.county == item.value){
+          this.City = item.label
+        }
+      })
+      
       this.getPoint(this.county)
       this.getMenuData(this.county)
       this.getBootInfo(this.county)
@@ -430,18 +439,24 @@ export default {
       this.countys = []
       this.county = ''
       let arrStr = ''  
-      // this.getArea(this.city)
-
+      this.getArea(this.city)
+      // console.log(this.city)
       this.citys.forEach((item,index)=>{
         if(item.value === this.city){
             arr = item.children    
-          }   
-      })  
+            console.log(item)
+          } 
+        if(this.city == item.value){
+          this.City = item.label
+        }  
+      }) 
+      //console.log(this.citys)
       this.countys = arr
         if(this.citys[0].label === '市辖区'){
           console.log('直辖区');
           return
         }  
+        // this.City = this.city
       this.switch2AreaNode(this.city)     
       const params = {
         adcode:this.city
@@ -496,8 +511,9 @@ export default {
     },
 
     async selectShop(info){
-      console.log(info);
+      // console.log(info);
       const _this = this
+      
       if(_this.selectInfo.adcode != info.adcode){
         await _this.switch2AreaNode(info.adcode)
       }
@@ -521,33 +537,50 @@ export default {
             infoWindow.open(_this.map, [info.lng,info.lat]);
         }
         _this.map.panTo([info.lng,info.lat]);
-        // _this.map.setZoom(18)        
+        _this.map.setZoom(18)        
         openInfoWin();
         _this.getAreaInfo(info.adcode)
         _this.getPoint(info.adcode)
       })
     },
+
     // 查看火警
-    SeeFire(info){
-      console.log(info)
+    async SeeFire(info){
       let _this = this
+    
+      console.log(_this.selectInfo.adcode,info.adcode)
+       if(_this.selectInfo.adcode == info.adcode || _this.selectInfo.adcode == undefined){
+        await _this.switch2AreaNode(info.adcode)
+      }
+        _this.selectInfo = info
       AMapUI.loadUI(['overlay/SimpleMarker'],function(SimpleMarker) {
-        new SimpleMarker({
+
+       var simpleMarker = new SimpleMarker({
             // iconLabel: '1',
             //自定义图标地址
             iconStyle: '../../static/img/huo.gif',
             //设置基点偏移
-            offset: new AMap.Pixel(-19, -30),
+            offset: new AMap.Pixel(0, 0),
             map: _this.map,
             showPositionPoint: true,
             position: [info.lng,info.lat],
             zIndex: 100
         });
-        // 定位到地图
+        simpleMarker.on('click', function(event) {            
+           _this.goShopDetail(info.uuid)
+        });
+          // 定位到地图
+        // function openInfoWin() {
+        //     infoWindow.open(_this.map, [info.lng,info.lat]);
+        // }
          _this.map.panTo([info.lng,info.lat]);
+        //  openInfoWin();
          _this.getAreaInfo(info.adcode)
          _this.getPoint(info.adcode)
+
       })
+
+    
     },
     getArea(areacode = this.$store.state.userData.regioncode){
       
@@ -897,6 +930,7 @@ export default {
         _this.FiredData = res
       })
     },
+
     //根据Hover状态设置相关样式
     toggleHoverFeature(feature, isHover, position) {
           const {tipMarker,map,districtExplorer,$tipMarkerContent} = this
@@ -1111,7 +1145,7 @@ export default {
         });
       //更新地图视野以适合区划面
       _this.map.setFitView(districtExplorer.getAllFeaturePolygons());
-      _this.map.setZoom(15)
+     
     }
   }
 }
@@ -1409,7 +1443,7 @@ display:none;
   }
   .map-right{
     width: 504px;
-    height: 860px;
+    height: 700px;
     background-color: #ffffff;
     box-shadow: 0px 0px 10px 0px 
       rgba(7, 1, 3, 0.2);
@@ -1453,6 +1487,8 @@ display:none;
     box-sizing: border-box;
   }
   .air{
+    overflow-x: scroll;
+    height: 610px;
     padding: 33px;
     box-sizing: border-box;
     .air-data{
@@ -1489,13 +1525,14 @@ display:none;
       img{
         height: 36px;
         width: 402px;
+        padding: 20px 0;
       }
     }
     
   }
   .right-list{ 
     overflow-x: scroll;
-    height: 620px;
+    height: 460px;
     margin-top: 20px;
     .list-container:first-child{
       margin-top: 0
@@ -1527,6 +1564,12 @@ display:none;
         }
       }
       .right-right{
+        p{
+          overflow: hidden;
+          text-overflow: ellipsis;
+          // border: 1px solid red;
+          width: 51px;
+        }
         i{
           font-size: 20px;
           display: flex;
@@ -1540,7 +1583,7 @@ display:none;
 
   .right-list1{ 
     overflow-x: scroll;
-    height: 746px;
+    height: 610px;
     margin-top: 20px;
     .list-container:first-child{
       margin-top: 0
@@ -1599,7 +1642,7 @@ display:none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 746px;
+    height: 610px;
   }
   .nothing>img{
     width:88px;

@@ -1,6 +1,6 @@
 import ajax from './ajax'
 import VueCookies from 'vue-cookies'
-//  const BASE_URL = 'http://192.168.33.230:8888'
+ //const BASE_URL = 'http://192.168.33.230:8888'
 const BASE_URL = 'https://orgapi.ltby65.com'
 
 export default BASE_URL;
